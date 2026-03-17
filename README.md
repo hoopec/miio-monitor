@@ -1,2 +1,177 @@
-# miio-monitor
+# Miio 设备监控系统
+
 基于 python-miio 的小米 IoT 设备数据采集和可视化系统。
+
+因为现在的米家智能插座都没有当日功率曲线，粒度只以日为单位，所以编写了这个项目获取24小时内功率变化。
+
+## 功能特性
+
+- 每 5 秒自动采集设备数据
+- 数据保存到 SQLite 数据库，自动清理超过 24 小时的数据
+- 支持多设备、多属性同时监控
+- Web 界面实时显示数据曲线
+- 响应式设计，支持手机和 PC 端访问
+- 可切换 1/3/6/9/24 小时时间范围
+
+## 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+`python-miio`如果安装失败使用下面这个
+
+```
+pip install git+https://github.com/rytilahti/python-miio.git
+```
+
+## 配置说明
+
+编辑 `config.json` 文件，配置你的设备信息：
+
+```json
+{
+  "devices": [
+    {
+      "id": "device1",
+      "name": "设备名称",
+      "ip": "192.168.1.100",
+      "token": "设备token",
+      "model": "设备型号",
+      "properties": [
+        {"siid": 2, "piid": 1, "name": "温度", "unit": "°C"},
+        {"siid": 2, "piid": 2, "name": "湿度", "unit": "%"}
+      ]
+    }
+  ],
+  "collection_interval": 5,
+  "data_retention_hours": 24
+}
+```
+
+### 获取设备信息
+
+1. 获取设备 IP 和 token：
+
+```
+~ miiocli cloud
+Username: example@example.com
+Password:
+
+== name of the device (Device offline ) ==
+    Model: example.device.v1
+    Token: b1946ac92492d2347c6235b4d2611184
+    IP: 192.168.xx.xx (mac: ab:cd:ef:12:34:56)
+    DID: 123456789
+    Locale: cn
+```
+
+或
+
+[Xiaomi-cloud-tokens-extractor](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+
+2. 获取设备属性（siid, piid）：
+
+[https://home.miot-spec.com/](https://home.miot-spec.com/)
+
+## 使用方法
+
+#### 0.测试设备连接（可选）
+
+配置完成后，先测试连接是否正常：
+
+```bash
+python test_connection.py
+```
+
+这会测试：
+
+- 设备是否可以连接
+- token 是否正确
+- 属性（siid/piid）是否可以读取
+
+### 1. 启动数据采集器
+
+```bash
+python collector.py
+```
+
+采集器会在后台持续运行，每 5 秒采集一次数据。
+
+### 2. 启动 Web 服务器
+
+```bash
+python web_server.py
+```
+
+### 3. 访问 Web 界面
+
+在浏览器中打开：
+- PC 端：http://localhost:5000
+- 手机端：http://<你的电脑IP>:5000
+
+## 项目结构
+
+```
+project07-miio/
+├── collector.py          # 数据采集器
+├── web_server.py         # Web 服务器
+├── config.json           # 配置文件
+├── data.db              # SQLite 数据库（自动创建）
+├── requirements.txt      # Python 依赖
+├── templates/
+│   └── index.html       # Web 页面模板
+└── static/
+    ├── css/
+    │   └── style.css    # 样式文件
+    └── js/
+        └── app.js       # 前端逻辑
+```
+
+## 数据库结构
+
+```sql
+CREATE TABLE sensor_data (
+    id INTEGER PRIMARY KEY,
+    timestamp DATETIME,
+    device_id TEXT,
+    siid INTEGER,
+    piid INTEGER,
+    property_name TEXT,
+    value REAL,
+    unit TEXT
+)
+```
+
+## 注意事项
+
+1. 确保设备和运行程序的电脑在同一局域网内
+2. 设备 token 需要通过 miiocli 工具获取
+3. 不同型号设备的 siid 和 piid 可能不同，需要查询设备规格
+4. 数据库会自动清理超过 24 小时的数据
+5. Web 界面每 10 秒自动刷新数据
+6. **同时运行两个脚本**：先启动采集器，再启动 Web 服务
+7. **停止服务**：在窗口中按 Ctrl+C 或直接关闭窗口
+8. **查看日志**：采集器窗口会实时显示采集状态
+
+## 故障排查
+
+### 无法连接设备
+- 检查 IP 地址是否正确
+- 检查 token 是否正确
+- 确认设备和电脑在同一网络
+
+### 无法获取属性
+- 检查 siid 和 piid 是否正确
+- 使用 miiocli 工具验证设备支持的属性
+
+### Web 界面无数据
+- 确认采集器正在运行
+- 检查 data.db 文件是否存在
+- 查看采集器日志输出
+
+### 手机无法访问
+
+- 确保电脑和手机在同一 WiFi
+- 关闭电脑防火墙或允许 5000 端口
+- 使用电脑的局域网 IP 地址

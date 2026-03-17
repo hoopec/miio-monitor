@@ -1,0 +1,2 @@
+python-miio>=0.5.12
+Flask>=3.0.0

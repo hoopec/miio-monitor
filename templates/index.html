@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miio 设备监控</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Miio 设备监控</h1>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="deviceSelect">选择设备：</label>
+                <select id="deviceSelect">
+                    <option value="">请选择设备</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="propertySelect">选择属性：</label>
+                <select id="propertySelect">
+                    <option value="">请先选择设备</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>时间范围：</label>
+                <div class="time-buttons">
+                    <button class="time-btn active" data-hours="1">1小时</button>
+                    <button class="time-btn" data-hours="3">3小时</button>
+                    <button class="time-btn" data-hours="6">6小时</button>
+                    <button class="time-btn" data-hours="9">9小时</button>
+                    <button class="time-btn" data-hours="24">24小时</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="latest-values" id="latestValues"></div>
+
+        <div class="chart-container">
+            <canvas id="dataChart"></canvas>
+        </div>
+
+        <div class="status" id="status">正在加载设备列表...</div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

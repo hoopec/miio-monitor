@@ -1,0 +1,29 @@
+{
+  "devices": [
+    {
+      "id": "device1",
+      "name": "客厅空调",
+      "ip": "192.168.1.100",
+      "token": "your_token_here",
+      "model": "xiaomi.aircondition.v1",
+      "properties": [
+        {"siid": 2, "piid": 1, "name": "温度", "unit": "°C"},
+        {"siid": 2, "piid": 2, "name": "湿度", "unit": "%"},
+        {"siid": 3, "piid": 1, "name": "功率", "unit": "W"}
+      ]
+    },
+    {
+      "id": "device2",
+      "name": "卧室空气净化器",
+      "ip": "192.168.1.101",
+      "token": "your_token_here",
+      "model": "zhimi.airpurifier.v1",
+      "properties": [
+        {"siid": 2, "piid": 6, "name": "PM2.5", "unit": "μg/m³"},
+        {"siid": 2, "piid": 7, "name": "温度", "unit": "°C"}
+      ]
+    }
+  ],
+  "collection_interval": 5,
+  "data_retention_hours": 24
+}
