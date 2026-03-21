@@ -1,8 +1,6 @@
 services:
   collector:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/hoopec/miio-monitor:latest
     container_name: miio-collector
     command: ["python", "collector.py"]
     volumes:
@@ -11,9 +9,7 @@ services:
     restart: unless-stopped
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/hoopec/miio-monitor:latest
     container_name: miio-web
     command: ["python", "web_server.py"]
     ports:

@@ -31,24 +31,41 @@ pip install git+https://github.com/rytilahti/python-miio.git
 
 - Workflow 文件：`.github/workflows/docker-image.yml`
 - 目标架构：`linux/amd64`、`linux/arm64`
-- 镜像仓库：`ghcr.io/<你的GitHub用户名>/<仓库名>`
+- 镜像仓库：`ghcr.io/hoopec/miio-monitor`
 - 触发条件：推送到 `main/master`、推送 `v*` tag、手动触发
 
-### 1) 本地构建镜像
+### 1) 直接拉取 Workflow 已构建镜像（推荐）
 
 ```bash
-docker build -t miio-monitor:local .
+docker pull ghcr.io/hoopec/miio-monitor:latest
 ```
 
-### 2) 使用 Docker 单独启动 Web 服务
+### 2) 使用 Docker 手动启动两个容器（collector + web）
 
-先确保已正确填写 `config.json`，并创建数据库文件：
+先登录 GHCR（仓库为私有时需要）：
+
+```bash
+docker login ghcr.io
+```
+
+然后先确保已正确填写 `config.json`，并创建数据库文件：
 
 ```bash
 python -c "open('data.db', 'a').close()"
 ```
 
-启动命令：
+先启动数据采集容器（collector）：
+
+```bash
+docker run -d \
+  --name miio-collector \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  -v $(pwd)/data.db:/app/data.db \
+  ghcr.io/hoopec/miio-monitor:latest \
+  python collector.py
+```
+
+再启动 Web 容器（web）：
 
 ```bash
 docker run -d \
@@ -56,17 +73,29 @@ docker run -d \
   -p 5000:5000 \
   -v $(pwd)/config.json:/app/config.json:ro \
   -v $(pwd)/data.db:/app/data.db \
-  miio-monitor:local
+  ghcr.io/hoopec/miio-monitor:latest \
+  python web_server.py
 ```
 
 > Windows PowerShell 可把 `$(pwd)` 改为 `${PWD}`。
 
+查看日志：
+
+```bash
+docker logs -f miio-collector
+docker logs -f miio-web
+```
+
+停止并删除两个容器：
+
+```bash
+docker stop miio-web miio-collector
+docker rm miio-web miio-collector
+```
+
 ### 3) 使用 Docker Compose 启动（推荐）
 
-项目已提供 `docker-compose.yml`，包含两个服务：
-
-- `collector`：执行 `python collector.py`，负责采集设备数据
-- `web`：执行 `python web_server.py`，负责提供 Web 页面与 API
+`docker-compose.yml` 已改为直接使用 Workflow 发布的镜像（不再本地 build）。
 
 首次使用前，建议先创建空数据库文件（避免挂载路径不存在）：
 
@@ -74,10 +103,16 @@ docker run -d \
 python -c "open('data.db', 'a').close()"
 ```
 
+拉取镜像：
+
+```bash
+docker compose pull
+```
+
 启动：
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 查看日志：
@@ -106,10 +141,17 @@ docker compose down
 
 `docker-compose.yml` 核心内容：
 
-- 两个服务都使用同一个 `Dockerfile` 构建镜像
+- `collector` / `web` 都使用同一镜像：`ghcr.io/hoopec/miio-monitor:latest`
+- `collector` 运行 `python collector.py`，`web` 运行 `python web_server.py`
 - `collector` 和 `web` 共享 `config.json` 与 `data.db`
 - `web` 暴露 `5000` 端口
 - 都设置了 `restart: unless-stopped`
+
+### 5) （可选）本地构建镜像用于调试
+
+```bash
+docker build -t miio-monitor:local .
+```
 
 ## 配置说明
 
