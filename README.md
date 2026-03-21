@@ -34,11 +34,82 @@ pip install git+https://github.com/rytilahti/python-miio.git
 - 镜像仓库：`ghcr.io/<你的GitHub用户名>/<仓库名>`
 - 触发条件：推送到 `main/master`、推送 `v*` tag、手动触发
 
-### 本地构建镜像
+### 1) 本地构建镜像
 
 ```bash
 docker build -t miio-monitor:local .
 ```
+
+### 2) 使用 Docker 单独启动 Web 服务
+
+先确保已正确填写 `config.json`，并创建数据库文件：
+
+```bash
+python -c "open('data.db', 'a').close()"
+```
+
+启动命令：
+
+```bash
+docker run -d \
+  --name miio-web \
+  -p 5000:5000 \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  -v $(pwd)/data.db:/app/data.db \
+  miio-monitor:local
+```
+
+> Windows PowerShell 可把 `$(pwd)` 改为 `${PWD}`。
+
+### 3) 使用 Docker Compose 启动（推荐）
+
+项目已提供 `docker-compose.yml`，包含两个服务：
+
+- `collector`：执行 `python collector.py`，负责采集设备数据
+- `web`：执行 `python web_server.py`，负责提供 Web 页面与 API
+
+首次使用前，建议先创建空数据库文件（避免挂载路径不存在）：
+
+```bash
+python -c "open('data.db', 'a').close()"
+```
+
+启动：
+
+```bash
+docker compose up -d --build
+```
+
+查看日志：
+
+```bash
+docker compose logs -f
+```
+
+只看采集器日志：
+
+```bash
+docker compose logs -f collector
+```
+
+停止并清理容器：
+
+```bash
+docker compose down
+```
+
+访问地址：
+
+- http://localhost:5000
+
+### 4) Compose 文件说明
+
+`docker-compose.yml` 核心内容：
+
+- 两个服务都使用同一个 `Dockerfile` 构建镜像
+- `collector` 和 `web` 共享 `config.json` 与 `data.db`
+- `web` 暴露 `5000` 端口
+- 都设置了 `restart: unless-stopped`
 
 ## 配置说明
 
@@ -128,19 +199,22 @@ python web_server.py
 ## 项目结构
 
 ```
-project07-miio/
-├── collector.py          # 数据采集器
-├── web_server.py         # Web 服务器
-├── config.json           # 配置文件
-├── data.db              # SQLite 数据库（自动创建）
-├── requirements.txt      # Python 依赖
+project05/
+├── collector.py                     # 数据采集器
+├── web_server.py                    # Web 服务器
+├── config.json                      # 配置文件
+├── data.db                          # SQLite 数据库（自动创建）
+├── requirements.txt                 # Python 依赖
+├── Dockerfile                       # Docker 镜像构建文件
+├── docker-compose.yml               # Docker Compose 编排
+├── .github/workflows/docker-image.yml # GitHub 多架构镜像构建
 ├── templates/
-│   └── index.html       # Web 页面模板
+│   └── index.html                  # Web 页面模板
 └── static/
     ├── css/
-    │   └── style.css    # 样式文件
+    │   └── style.css               # 样式文件
     └── js/
-        └── app.js       # 前端逻辑
+        └── app.js                  # 前端逻辑
 ```
 
 ## 数据库结构

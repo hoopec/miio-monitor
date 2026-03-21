@@ -1,0 +1,26 @@
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: miio-collector
+    command: ["python", "collector.py"]
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data.db:/app/data.db
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: miio-web
+    command: ["python", "web_server.py"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data.db:/app/data.db
+    depends_on:
+      - collector
+    restart: unless-stopped
