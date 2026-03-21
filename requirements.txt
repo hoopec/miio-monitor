@@ -1,2 +1,2 @@
-python-miio>=0.5.12
+git+https://github.com/rytilahti/python-miio.git
 Flask>=3.0.0

@@ -19,10 +19,25 @@
 pip install -r requirements.txt
 ```
 
-`python-miio`如果安装失败使用下面这个
+`python-miio` 在本项目中默认使用 README 推荐的 git 方式安装（已写入 `requirements.txt`）：
 
 ```
 pip install git+https://github.com/rytilahti/python-miio.git
+```
+
+## Docker 与 GitHub 自动构建
+
+项目已支持通过 GitHub Actions 自动构建多架构 Docker 镜像：
+
+- Workflow 文件：`.github/workflows/docker-image.yml`
+- 目标架构：`linux/amd64`、`linux/arm64`
+- 镜像仓库：`ghcr.io/<你的GitHub用户名>/<仓库名>`
+- 触发条件：推送到 `main/master`、推送 `v*` tag、手动触发
+
+### 本地构建镜像
+
+```bash
+docker build -t miio-monitor:local .
 ```
 
 ## 配置说明
