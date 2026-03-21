@@ -6,6 +6,7 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
       - ./data.db:/app/data.db
+    network_mode: host
     restart: unless-stopped
 
   web:
@@ -17,6 +18,7 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
       - ./data.db:/app/data.db
+    network_mode: host
     depends_on:
       - collector
     restart: unless-stopped
