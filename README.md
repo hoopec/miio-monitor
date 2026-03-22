@@ -40,6 +40,8 @@ pip install git+https://github.com/rytilahti/python-miio.git
 docker pull ghcr.io/hoopec/miio-monitor:latest
 ```
 
+> 本镜像默认时区为 `Asia/Shanghai`。如果本地已缓存旧镜像，请先重新 `docker pull`。
+
 ### 2) 使用 Docker 手动启动两个容器（collector + web）
 
 先登录 GHCR（仓库为私有时需要）：
@@ -59,6 +61,7 @@ python -c "open('data.db', 'a').close()"
 ```bash
 docker run -d \
   --name miio-collector \
+  -e TZ=Asia/Shanghai \
   -v $(pwd)/config.json:/app/config.json:ro \
   -v $(pwd)/data.db:/app/data.db \
   ghcr.io/hoopec/miio-monitor:latest \
@@ -70,6 +73,7 @@ docker run -d \
 ```bash
 docker run -d \
   --name miio-web \
+  -e TZ=Asia/Shanghai \
   -p 5000:5000 \
   -v $(pwd)/config.json:/app/config.json:ro \
   -v $(pwd)/data.db:/app/data.db \
@@ -96,6 +100,8 @@ docker rm miio-web miio-collector
 ### 3) 使用 Docker Compose 启动（推荐）
 
 `docker-compose.yml` 已改为直接使用 Workflow 发布的镜像（不再本地 build）。
+
+并且已为 `collector/web` 显式设置 `TZ=Asia/Shanghai`，保证容器时间与中国时区一致。
 
 首次使用前，建议先创建空数据库文件（避免挂载路径不存在）：
 

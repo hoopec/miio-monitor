@@ -3,6 +3,8 @@ services:
     image: ghcr.io/hoopec/miio-monitor:latest
     container_name: miio-collector
     command: ["python", "collector.py"]
+    environment:
+      - TZ=Asia/Shanghai
     volumes:
       - ./config.json:/app/config.json:ro
       - ./data.db:/app/data.db
@@ -13,6 +15,8 @@ services:
     image: ghcr.io/hoopec/miio-monitor:latest
     container_name: miio-web
     command: ["python", "web_server.py"]
+    environment:
+      - TZ=Asia/Shanghai
     ports:
       - "5000:5000"
     volumes:
