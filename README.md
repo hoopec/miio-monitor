@@ -50,10 +50,17 @@ docker pull ghcr.io/hoopec/miio-monitor:latest
 docker login ghcr.io
 ```
 
-然后先确保已正确填写 `config.json`，并创建数据库文件：
+然后先确保已正确填写 `config.json`，并准备数据库目录：
 
 ```bash
-python -c "open('data.db', 'a').close()"
+mkdir -p data
+python -c "open('data/data.db', 'a').close()"
+```
+
+如果你之前使用的是根目录 `data.db`，可迁移到目录挂载：
+
+```bash
+cp data.db data/data.db
 ```
 
 先启动数据采集容器（collector）：
@@ -62,8 +69,9 @@ python -c "open('data.db', 'a').close()"
 docker run -d \
   --name miio-collector \
   -e TZ=Asia/Shanghai \
+  -e DB_PATH=/app/data/data.db \
   -v $(pwd)/config.json:/app/config.json:ro \
-  -v $(pwd)/data.db:/app/data.db \
+  -v $(pwd)/data:/app/data \
   ghcr.io/hoopec/miio-monitor:latest \
   python collector.py
 ```
@@ -74,9 +82,10 @@ docker run -d \
 docker run -d \
   --name miio-web \
   -e TZ=Asia/Shanghai \
+  -e DB_PATH=/app/data/data.db \
   -p 5000:5000 \
   -v $(pwd)/config.json:/app/config.json:ro \
-  -v $(pwd)/data.db:/app/data.db \
+  -v $(pwd)/data:/app/data \
   ghcr.io/hoopec/miio-monitor:latest \
   python web_server.py
 ```
@@ -103,10 +112,11 @@ docker rm miio-web miio-collector
 
 并且已为 `collector/web` 显式设置 `TZ=Asia/Shanghai`，保证容器时间与中国时区一致。
 
-首次使用前，建议先创建空数据库文件（避免挂载路径不存在）：
+首次使用前，建议先创建数据库目录和空库文件（避免挂载路径不存在）：
 
 ```bash
-python -c "open('data.db', 'a').close()"
+mkdir -p data
+python -c "open('data/data.db', 'a').close()"
 ```
 
 拉取镜像：
@@ -149,7 +159,7 @@ docker compose down
 
 - `collector` / `web` 都使用同一镜像：`ghcr.io/hoopec/miio-monitor:latest`
 - `collector` 运行 `python collector.py`，`web` 运行 `python web_server.py`
-- `collector` 和 `web` 共享 `config.json` 与 `data.db`
+- `collector` 和 `web` 共享 `config.json` 与 `./data` 目录（含 `data.db`、`data.db-wal`、`data.db-shm`）
 - `web` 暴露 `5000` 端口
 - 都设置了 `restart: unless-stopped`
 

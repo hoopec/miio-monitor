@@ -5,9 +5,10 @@ services:
     command: ["python", "collector.py"]
     environment:
       - TZ=Asia/Shanghai
+      - DB_PATH=/app/data/data.db
     volumes:
       - ./config.json:/app/config.json:ro
-      - ./data.db:/app/data.db
+      - ./data:/app/data
     network_mode: host
     restart: unless-stopped
 
@@ -17,11 +18,12 @@ services:
     command: ["python", "web_server.py"]
     environment:
       - TZ=Asia/Shanghai
+      - DB_PATH=/app/data/data.db
     ports:
       - "5000:5000"
     volumes:
       - ./config.json:/app/config.json:ro
-      - ./data.db:/app/data.db
+      - ./data:/app/data
     depends_on:
       - collector
     restart: unless-stopped
